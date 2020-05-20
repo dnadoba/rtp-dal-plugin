@@ -41,37 +41,42 @@ private func InitializeWithObjectID(plugin: CMIOHardwarePlugInRef?, objectID: CM
     let pluginObject = Plugin()
     pluginObject.objectID = objectID
     addObject(object: pluginObject)
+    let devices = [Device(name: "Davids iPhone"), Device(name: "Davids iPad")]
+    for device in devices {
+        error = CMIOObjectCreate(plugin, CMIOObjectID(kCMIOObjectSystemObject), CMIOClassID(kCMIODeviceClassID), &device.objectID)
+        guard error == noErr else {
+            log("error: \(error)")
+            return error
+        }
+        addObject(object: device)
 
-    let device = Device()
-    error = CMIOObjectCreate(plugin, CMIOObjectID(kCMIOObjectSystemObject), CMIOClassID(kCMIODeviceClassID), &device.objectID)
-    guard error == noErr else {
-        log("error: \(error)")
-        return error
+        let streams = [Stream(name: "Stream 1")]
+        
+        for stream in streams {
+            error = CMIOObjectCreate(plugin, device.objectID, CMIOClassID(kCMIOStreamClassID), &stream.objectID)
+            guard error == noErr else {
+                log("error: \(error)")
+                return error
+            }
+            addObject(object: stream)
+            device.streamIDs.append(stream.objectID)
+        }
+
+        
+
+        error = CMIOObjectsPublishedAndDied(plugin, CMIOObjectID(kCMIOObjectSystemObject), 1, &device.objectID, 0, nil)
+        guard error == noErr else {
+            log("error: \(error)")
+            return error
+        }
+        for stream in streams {
+            error = CMIOObjectsPublishedAndDied(plugin, device.objectID, 1, &stream.objectID, 0, nil)
+            guard error == noErr else {
+                log("error: \(error)")
+                return error
+            }
+        }
     }
-    addObject(object: device)
-
-    let stream = Stream()
-    error = CMIOObjectCreate(plugin, device.objectID, CMIOClassID(kCMIOStreamClassID), &stream.objectID)
-    guard error == noErr else {
-        log("error: \(error)")
-        return error
-    }
-    addObject(object: stream)
-
-    device.streamID = stream.objectID
-
-    error = CMIOObjectsPublishedAndDied(plugin, CMIOObjectID(kCMIOObjectSystemObject), 1, &device.objectID, 0, nil)
-    guard error == noErr else {
-        log("error: \(error)")
-        return error
-    }
-
-    error = CMIOObjectsPublishedAndDied(plugin, device.objectID, 1, &stream.objectID, 0, nil)
-    guard error == noErr else {
-        log("error: \(error)")
-        return error
-    }
-
     return noErr
 }
 private func Teardown(plugin: CMIOHardwarePlugInRef?) -> OSStatus {

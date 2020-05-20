@@ -11,10 +11,10 @@ import IOKit
 
 class Device: Object {
     var objectID: CMIOObjectID = 0
-    var streamID: CMIOStreamID = 0
-    let name = "SimpleDALPlugin"
-    let manufacturer = "seanchas116"
-    let deviceUID = "SimpleDALPlugin Device"
+    var streamIDs: [CMIOStreamID] = []
+    let name: String
+    let manufacturer = "Apple"
+    var deviceUID: String { "\(name) Device" }
     let modelUID = "SimpleDALPlugin Model"
     var excludeNonDALAccess: Bool = false
     var deviceMaster: Int32 = -1
@@ -32,7 +32,7 @@ class Device: Object {
         kCMIODevicePropertyCanProcessAVCCommand: Property(UInt32(0)),
         kCMIODevicePropertyCanProcessRS422Command: Property(UInt32(0)),
         kCMIODevicePropertyHogMode: Property(Int32(-1)),
-        kCMIODevicePropertyStreams: Property { [unowned self] in self.streamID },
+        kCMIODevicePropertyStreams: Property { [unowned self] in self.streamIDs.first! },
         kCMIODevicePropertyExcludeNonDALAccess: Property(
             getter: { [unowned self] () -> UInt32 in self.excludeNonDALAccess ? 1 : 0 },
             setter: { [unowned self] (value: UInt32) -> Void in self.excludeNonDALAccess = value != 0  }
@@ -42,4 +42,8 @@ class Device: Object {
             setter: { [unowned self] (value: Int32) -> Void in self.deviceMaster = value  }
         ),
     ]
+    
+    init(name: String) {
+        self.name = name
+    }
 }

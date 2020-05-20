@@ -10,7 +10,7 @@ import Foundation
 
 class Stream: Object {
     var objectID: CMIOObjectID = 0
-    let name = "SimpleDALPlugin"
+    let name: String
     let width = 1280
     let height = 720
     let frameRate = 30
@@ -66,8 +66,10 @@ class Stream: Object {
 
     private lazy var timer: DispatchSourceTimer = {
         let interval = 1.0 / Double(frameRate)
-        let timer = DispatchSource.makeTimerSource()
-        timer.schedule(deadline: .now() + interval, repeating: .milliseconds(1000 / frameRate))
+        let timer = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags.strict)
+        
+        timer.schedule(deadline: .now() + interval,
+                       repeating: .microseconds((1000 * 1000) / frameRate))
         timer.setEventHandler(handler: { [weak self] in
             self?.enqueueBuffer()
         })
@@ -85,6 +87,10 @@ class Stream: Object {
         kCMIOStreamPropertyFrameRateRanges: Property(AudioValueRange(mMinimum: Float64(frameRate), mMaximum: Float64(frameRate))),
         kCMIOStreamPropertyClock: Property(CFTypeRefWrapper(ref: clock!)),
     ]
+    
+    init(name: String) {
+        self.name = name
+    }
 
     func start() {
         timer.resume()
@@ -100,10 +106,10 @@ class Stream: Object {
         return self.queue
     }
 
-    private func createPixelBuffer() -> CVPixelBuffer? {
+    private func createPixelBuffer(sequenceNumber: Int) -> CVPixelBuffer? {
         let pixelBuffer = CVPixelBuffer.create(size: CGSize(width: width, height: height))
         pixelBuffer?.modifyWithContext { [width, height] context in
-            let time = Double(mach_absolute_time()) / Double(1000_000_000)
+            let time = Double(sequenceNumber) * 1/Double(frameRate)
             let pos = CGFloat(time - floor(time))
 
             context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
@@ -127,14 +133,13 @@ class Stream: Object {
             return
         }
 
-        guard let pixelBuffer = createPixelBuffer() else {
+        guard let pixelBuffer = createPixelBuffer(sequenceNumber: Int(sequenceNumber)) else {
             log("pixelBuffer is nil")
             return
         }
 
-        let scale = UInt64(frameRate) * 100
-        let duration = CMTime(value: CMTimeValue(scale / UInt64(frameRate)), timescale: CMTimeScale(scale))
-        let timestamp = CMTime(value: duration.value * CMTimeValue(sequenceNumber), timescale: CMTimeScale(scale))
+        let duration = CMTime(value: 1, timescale: CMTimeScale(frameRate))
+        let timestamp = CMTime(value: CMTimeValue(sequenceNumber), timescale: CMTimeScale(frameRate))
 
         var timing = CMSampleTimingInfo(
             duration: duration,
