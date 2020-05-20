@@ -14,26 +14,23 @@ protocol Object: class {
 }
 
 extension Object {
+    private func property(for address: CMIOObjectPropertyAddress) -> Property? {
+        properties[Int(address.mSelector)]
+    }
     func hasProperty(address: CMIOObjectPropertyAddress) -> Bool {
-        return properties[Int(address.mSelector)] != nil
+        property(for: address) != nil
     }
 
     func isPropertySettable(address: CMIOObjectPropertyAddress) -> Bool {
-        guard let property = properties[Int(address.mSelector)] else {
-            return false
-        }
-        return property.isSettable
+        property(for: address)?.isSettable ?? false
     }
 
     func getPropertyDataSize(address: CMIOObjectPropertyAddress) -> UInt32 {
-        guard let property = properties[Int(address.mSelector)] else {
-            return 0
-        }
-        return property.dataSize
+        property(for: address)?.dataSize ?? 0
     }
 
     func getPropertyData(address: CMIOObjectPropertyAddress, dataSize: inout UInt32, data: UnsafeMutableRawPointer) {
-        guard let property = properties[Int(address.mSelector)] else {
+        guard let property = property(for: address) else {
             return
         }
         dataSize = property.dataSize
@@ -41,10 +38,7 @@ extension Object {
     }
 
     func setPropertyData(address: CMIOObjectPropertyAddress, data: UnsafeRawPointer) {
-        guard let property = properties[Int(address.mSelector)] else {
-            return
-        }
-        property.setData(data: data)
+        property(for: address)?.setData(data: data)
     }
 }
 
