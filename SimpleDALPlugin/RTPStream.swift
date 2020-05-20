@@ -37,8 +37,8 @@ class RTPStream: Stream {
             kCFAllocatorDefault,
             "SimpleDALPlugin clock" as CFString,
             Unmanaged.passUnretained(self).toOpaque(),
-            CMTimeMake(value: 1, timescale: 900),
-            100, 0,
+            CMTimeMake(value: 1, timescale: 10),
+            100, 10,
             &clock);
         guard error == noErr else {
             log("CMIOStreamClockCreate Error: \(error)")
@@ -85,7 +85,7 @@ class RTPStream: Stream {
             var formatDescription: CMVideoFormatDescription?
             let error = CMVideoFormatDescriptionCreate(
                 allocator: kCFAllocatorDefault,
-                codecType: kCVPixelFormatType_32ARGB,
+                codecType: kCVPixelFormatType_32BGRA,
                 width: Int32(width), height: Int32(height),
                 extensions: nil,
                 formatDescriptionOut: &formatDescription)
@@ -101,76 +101,127 @@ class RTPStream: Stream {
     private var reciever: RTPH264Reciever?
     private var decoder: VideoDecoder?
     func start() {
-        reciever = try? .init(host: "0.0.0.0", port: 1234, timebase: CMTimebase(masterClock: CMClockGetHostTimeClock()))
+        log("RTPStream start()")
+        guard reciever == nil else {
+            log("RTPStream is already running")
+            return
+        }
+        reciever = try? .init(host: "0.0.0.0", port: 8080, timebase: CMTimebase(masterClock: CMClockGetHostTimeClock()))
         reciever?.didRecieveFormatDescription = { [weak self] formatDescription in
             guard let self = self else { return }
-            log("\(formatDescription)")
-            self.formatDescription = formatDescription
+    
+            do {
+                if let decoder = self.decoder {
+                    if !decoder.canAcceptFormatDescription(formatDescription) {
+                        self.decoder = try self.makeDecoder(formatDescription: formatDescription)
+                    }
+                } else {
+                    self.decoder = try self.makeDecoder(formatDescription: formatDescription)
+                }
+            } catch {
+                log(error)
+            }
             
-            
-//            do {
-//                if let decoder = self.decoder {
-//                    if !decoder.canAcceptFormatDescription(formatDescription) {
-//                        self.decoder = try self.makeDecoder(formatDescription: formatDescription)
-//                    }
-//                } else {
-//                    self.decoder = try self.makeDecoder(formatDescription: formatDescription)
-//                }
-//            } catch {
-//                log(error)
-//            }
-            
-            
-            let changedAddresses = [
-            CMIOObjectPropertyAddress(
-                mSelector: UInt32(kCMIOStreamPropertyFormatDescription),
-                mScope: UInt32(kCMIOObjectPropertyScopeGlobal),
-                mElement: UInt32(kCMIOObjectPropertyElementMaster)),
-            CMIOObjectPropertyAddress(
-                mSelector: UInt32(kCMIOStreamPropertyFormatDescriptions),
-                mScope: UInt32(kCMIOObjectPropertyScopeGlobal),
-                mElement: UInt32(kCMIOObjectPropertyElementMaster)),
-            ]
-            CMIOObjectPropertiesChanged(pluginRef, self.objectID, UInt32(changedAddresses.count), changedAddresses)
         }
         reciever?.didRecieveSampleBuffer = { [weak self] sampleBuffer in
+            log("did didRecieveSampleBuffer")
             guard let self = self else { return }
-            let error = CMIOStreamClockPostTimingEvent(sampleBuffer.outputPresentationTimeStamp, mach_absolute_time(), true, self.clock)
-            guard error == noErr else {
-                log("CMIOStreamClockPostTimingEvent Error: \(error)")
-                return
+            
+            do {
+                try self.decoder?.decodeFrame(sampleBuffer: sampleBuffer, flags: [._1xRealTimePlayback, ._EnableAsynchronousDecompression])
+            } catch {
+                log(error)
             }
-            self.enqueueSampleBuffer(sampleBuffer)
-//            do {
-//                try self?.decoder?.decodeFrame(sampleBuffer: sampleBuffer, flags: [._1xRealTimePlayback, ._EnableAsynchronousDecompression])
-//            } catch {
-//                log(error)
-//            }
         }
     }
     
     private func makeDecoder(formatDescription: CMVideoFormatDescription) throws -> VideoDecoder {
         let decoder = try VideoDecoder(formatDescription: formatDescription)
         decoder.callback = { [weak self] (frame, presentationTimeStamp, presentationDuraton) in
-//            guard let frame = frame else { return }
-//            var formatDescription: CMVideoFormatDescription?
-//            let error = CMVideoFormatDescriptionCreate(
-//                allocator: kCFAllocatorDefault,
-//                codecType: CVPixelBufferGetPixelFormatType(frame),
-//                width: Int32(frame.width), height: Int32(frame.height),
-//                extensions: nil,
-//                formatDescriptionOut: &formatDescription)
-//            guard error == noErr else {
-//                log("CMVideoFormatDescriptionCreate Error: \(error)")
-//                return
-//            }
-
+            log("did decode")
+            
+            guard let self = self else { return }
+            
+            //let presentationTimeStamp = CMTime(value: CMTimeValue(self.sequenceNumber + 1), timescale: CMTimeScale(self.frameRate))
+            let presentationTimeStamp = CMClockGetHostTimeClock().time
+            
+            var error = CMIOStreamClockPostTimingEvent(presentationTimeStamp, mach_absolute_time(), false, self.clock)
+            guard error == noErr else {
+                log("CMIOStreamClockPostTimingEvent Error: \(error)")
+                return
+            }
+            
+            guard let queue = self.queue else {
+                log("queue is nil")
+                return
+            }
+            
+            guard CMSimpleQueueGetCount(queue) < CMSimpleQueueGetCapacity(queue) else {
+                log("queue is full")
+                return
+            }
+            
+            guard let frame = frame else { return }
+            var formatDescription: CMFormatDescription?
+            error = CMVideoFormatDescriptionCreateForImageBuffer(
+                allocator: kCFAllocatorDefault,
+                imageBuffer: frame,
+                formatDescriptionOut: &formatDescription)
+            guard error == noErr else {
+                log("CMVideoFormatDescriptionCreateForImageBuffer Error: \(error)")
+                return
+            }
+            log(formatDescription)
+            let oldFormatDescription = formatDescription
+            self.formatDescription = formatDescription
+            if oldFormatDescription != formatDescription {
+                let changedAddresses = [
+                    CMIOObjectPropertyAddress(
+                        mSelector: UInt32(kCMIOStreamPropertyFormatDescription),
+                        mScope: UInt32(kCMIOObjectPropertyScopeGlobal),
+                        mElement: UInt32(kCMIOObjectPropertyElementMaster)),
+                    CMIOObjectPropertyAddress(
+                        mSelector: UInt32(kCMIOStreamPropertyFormatDescriptions),
+                        mScope: UInt32(kCMIOObjectPropertyScopeGlobal),
+                        mElement: UInt32(kCMIOObjectPropertyElementMaster)),
+                ]
+                CMIOObjectPropertiesChanged(pluginRef, self.objectID, UInt32(changedAddresses.count), changedAddresses)
+            }
+            
+            var timing = CMSampleTimingInfo(
+                duration: presentationDuraton,
+                presentationTimeStamp: presentationTimeStamp,
+                decodeTimeStamp: presentationTimeStamp
+            )
+            
+            
+            var sampleBufferUnmanaged: Unmanaged<CMSampleBuffer>? = nil
+            error = CMIOSampleBufferCreateForImageBuffer(
+                kCFAllocatorDefault,
+                frame,
+                formatDescription,
+                &timing,
+                self.getNextSequenceNumber(),
+                UInt32(kCMIOSampleBufferNoDiscontinuities),
+                &sampleBufferUnmanaged
+            )
+            guard error == noErr else {
+                log("CMIOSampleBufferCreateForImageBuffer Error: \(error)")
+                return
+            }
+            log("enque sample buffer")
+            CMSimpleQueueEnqueue(queue, element: sampleBufferUnmanaged!.toOpaque())
+            self.queueAlteredProc?(self.objectID, sampleBufferUnmanaged!.toOpaque(), self.queueAlteredRefCon)
         }
         return decoder
     }
 
     func stop() {
-        reciever = nil
+        //reciever = nil
+    }
+    private func getNextSequenceNumber() -> UInt64 {
+        defer { sequenceNumber += 1 }
+        return sequenceNumber
     }
 
     func copyBufferQueue(queueAlteredProc: CMIODeviceStreamQueueAlteredProc?, queueAlteredRefCon: UnsafeMutableRawPointer?) -> CMSimpleQueue? {
