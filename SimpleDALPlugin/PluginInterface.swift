@@ -50,7 +50,7 @@ private func InitializeWithObjectID(plugin: CMIOHardwarePlugInRef?, objectID: CM
         }
         addObject(object: device)
 
-        let streams = [Stream(name: "Stream 1")]
+        let streams = [RTPStream(name: "RTP Stream")]
         
         for stream in streams {
             error = CMIOObjectCreate(plugin, device.objectID, CMIOClassID(kCMIOStreamClassID), &stream.objectID)

@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Stream: Object {
+class DebugStream: Stream {
     var objectID: CMIOObjectID = 0
     let name: String
     let width = 1280
@@ -151,7 +151,7 @@ class Stream: Object {
 
         error = CMIOStreamClockPostTimingEvent(timestamp, mach_absolute_time(), true, clock)
         guard error == noErr else {
-            log("CMSimpleQueueCreate Error: \(error)")
+            log("CMIOStreamClockPostTimingEvent Error: \(error)")
             return
         }
 

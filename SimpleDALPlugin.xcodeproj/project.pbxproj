@@ -3,10 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F3081292474C5BD00F099D9 /* RTPStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3081282474C5BD00F099D9 /* RTPStream.swift */; };
+		4F30812D2474CC8200F099D9 /* SwiftRTP in Frameworks */ = {isa = PBXBuildFile; productRef = 4F30812C2474CC8200F099D9 /* SwiftRTP */; };
+		4F30812F2474CCBA00F099D9 /* RTPAVKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4F30812E2474CCBA00F099D9 /* RTPAVKit */; };
 		BE8832AC2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8832AB2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift */; };
 		BEF5B53A2453D9CA00E7FC18 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF5B5392453D9CA00E7FC18 /* Main.swift */; };
 		BEF5B53D2453DFA200E7FC18 /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEF5B53C2453DFA200E7FC18 /* CoreMediaIO.framework */; };
@@ -20,6 +23,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4F3081262474C58100F099D9 /* SwiftRTP */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftRTP; path = ../SwiftRTP; sourceTree = "<group>"; };
+		4F3081272474C59D00F099D9 /* RTPAVKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RTPAVKit; path = ../RTPAVKit; sourceTree = "<group>"; };
+		4F3081282474C5BD00F099D9 /* RTPStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPStream.swift; sourceTree = "<group>"; };
 		BE8832AB2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+SimpleDALPlugin.swift"; sourceTree = "<group>"; };
 		BEF5B52F2453D9B300E7FC18 /* SimpleDALPlugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleDALPlugin.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEF5B5322453D9B300E7FC18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -41,6 +47,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BEF5B53D2453DFA200E7FC18 /* CoreMediaIO.framework in Frameworks */,
+				4F30812D2474CC8200F099D9 /* SwiftRTP in Frameworks */,
+				4F30812F2474CCBA00F099D9 /* RTPAVKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +58,8 @@
 		BEF5B5262453D9B300E7FC18 = {
 			isa = PBXGroup;
 			children = (
+				4F3081262474C58100F099D9 /* SwiftRTP */,
+				4F3081272474C59D00F099D9 /* RTPAVKit */,
 				BEF5B5312453D9B300E7FC18 /* SimpleDALPlugin */,
 				BEF5B5302453D9B300E7FC18 /* Products */,
 				BEF5B53B2453DFA200E7FC18 /* Frameworks */,
@@ -78,6 +88,7 @@
 				BEF5B54924540C0500E7FC18 /* Stream.swift */,
 				BEF5B54C245417B600E7FC18 /* Property.swift */,
 				BE8832AB2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift */,
+				4F3081282474C5BD00F099D9 /* RTPStream.swift */,
 			);
 			path = SimpleDALPlugin;
 			sourceTree = "<group>";
@@ -100,12 +111,17 @@
 				BEF5B52B2453D9B300E7FC18 /* Sources */,
 				BEF5B52C2453D9B300E7FC18 /* Frameworks */,
 				BEF5B52D2453D9B300E7FC18 /* Resources */,
+				4F3081252474628C00F099D9 /* ShellScript */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = SimpleDALPlugin;
+			packageProductDependencies = (
+				4F30812C2474CC8200F099D9 /* SwiftRTP */,
+				4F30812E2474CCBA00F099D9 /* RTPAVKit */,
+			);
 			productName = SimpleDALPlugin;
 			productReference = BEF5B52F2453D9B300E7FC18 /* SimpleDALPlugin.plugin */;
 			productType = "com.apple.product-type.bundle";
@@ -153,6 +169,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		4F3081252474628C00F099D9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rm -rf /Library/CoreMediaIO/Plug-Ins/DAL/${FULL_PRODUCT_NAME}\n\\cp -rf ${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME} /Library/CoreMediaIO/Plug-Ins/DAL/\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		BEF5B52B2453D9B300E7FC18 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -160,6 +197,7 @@
 			files = (
 				BEF5B53F2453E8F500E7FC18 /* PluginInterface.swift in Sources */,
 				BEF5B5412453F50000E7FC18 /* Object.swift in Sources */,
+				4F3081292474C5BD00F099D9 /* RTPStream.swift in Sources */,
 				BEF5B5452454003B00E7FC18 /* Log.swift in Sources */,
 				BE8832AC2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift in Sources */,
 				BEF5B547245403AF00E7FC18 /* Device.swift in Sources */,
@@ -351,6 +389,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F30812C2474CC8200F099D9 /* SwiftRTP */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftRTP;
+		};
+		4F30812E2474CCBA00F099D9 /* RTPAVKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTPAVKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BEF5B5272453D9B300E7FC18 /* Project object */;
 }
