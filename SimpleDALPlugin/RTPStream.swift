@@ -9,6 +9,7 @@
 import Foundation
 import SwiftRTP
 import RTPAVKit
+import Network
 
 protocol Stream: Object {
     func start()
@@ -106,7 +107,9 @@ class RTPStream: Stream {
             log("RTPStream is already running")
             return
         }
-        reciever = try? .init(host: "0.0.0.0", port: 8080, timebase: CMTimebase(masterClock: CMClockGetHostTimeClock()))
+        // TODO: use Browser
+        let connection = NWConnection(to: .hostPort(host: .ipv4(.any), port: 8080), using: .udp)
+        reciever = try? .init(connection: connection, timebase: CMTimebase(masterClock: CMClockGetHostTimeClock()))
         reciever?.didRecieveFormatDescription = { [weak self] formatDescription in
             guard let self = self else { return }
     
@@ -143,9 +146,16 @@ class RTPStream: Stream {
             guard let self = self else { return }
             
             //let presentationTimeStamp = CMTime(value: CMTimeValue(self.sequenceNumber + 1), timescale: CMTimeScale(self.frameRate))
-            let presentationTimeStamp = CMClockGetHostTimeClock().time
+            let duration = CMTime(value: 1, timescale: CMTimeScale(self.frameRate))
+            let timestamp = CMTime(value: CMTimeValue(self.sequenceNumber), timescale: CMTimeScale(self.frameRate))
+
+            var timing = CMSampleTimingInfo(
+                duration: duration,
+                presentationTimeStamp: timestamp,
+                decodeTimeStamp: timestamp
+            )
             
-            var error = CMIOStreamClockPostTimingEvent(presentationTimeStamp, mach_absolute_time(), false, self.clock)
+            var error = CMIOStreamClockPostTimingEvent(timestamp, mach_absolute_time(), false, self.clock)
             guard error == noErr else {
                 log("CMIOStreamClockPostTimingEvent Error: \(error)")
                 return
@@ -187,12 +197,6 @@ class RTPStream: Stream {
                 ]
                 CMIOObjectPropertiesChanged(pluginRef, self.objectID, UInt32(changedAddresses.count), changedAddresses)
             }
-            
-            var timing = CMSampleTimingInfo(
-                duration: presentationDuraton,
-                presentationTimeStamp: presentationTimeStamp,
-                decodeTimeStamp: presentationTimeStamp
-            )
             
             
             var sampleBufferUnmanaged: Unmanaged<CMSampleBuffer>? = nil
