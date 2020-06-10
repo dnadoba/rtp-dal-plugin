@@ -10,6 +10,7 @@ import Foundation
 
 class DebugStream: Stream {
     var objectID: CMIOObjectID = 0
+    var owningObjectID: CMIOObjectID = 0
     let name: String
     let width = 1280
     let height = 720

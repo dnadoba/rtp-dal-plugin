@@ -36,45 +36,13 @@ private func InitializeWithObjectID(plugin: CMIOHardwarePlugInRef?, objectID: CM
         return OSStatus(kCMIOHardwareIllegalOperationError)
     }
 
-    var error = noErr
 
-    let pluginObject = Plugin()
+    let pluginObject = Plugin(ref: plugin)
     pluginObject.objectID = objectID
     addObject(object: pluginObject)
-    let devices = [Device(name: "Davids iPhone")]
-    for device in devices {
-        error = CMIOObjectCreate(plugin, CMIOObjectID(kCMIOObjectSystemObject), CMIOClassID(kCMIODeviceClassID), &device.objectID)
-        guard error == noErr else {
-            log("error: \(error)")
-            return error
-        }
-        addObject(object: device)
-
-        let stream = RTPStream(name: "RTP Stream")
-        error = CMIOObjectCreate(plugin, device.objectID, CMIOClassID(kCMIOStreamClassID), &stream.objectID)
-        guard error == noErr else {
-            log("error: \(error)")
-            return error
-        }
-        addObject(object: stream)
-        device.streamID = stream.objectID
-        
-
-        
-
-        error = CMIOObjectsPublishedAndDied(plugin, CMIOObjectID(kCMIOObjectSystemObject), 1, &device.objectID, 0, nil)
-        guard error == noErr else {
-            log("error: \(error)")
-            return error
-        }
-        
-        error = CMIOObjectsPublishedAndDied(plugin, device.objectID, 1, &stream.objectID, 0, nil)
-        guard error == noErr else {
-            log("error: \(error)")
-            return error
-        }
-        
-    }
+    
+    pluginObject.start()
+    
     return noErr
 }
 private func Teardown(plugin: CMIOHardwarePlugInRef?) -> OSStatus {

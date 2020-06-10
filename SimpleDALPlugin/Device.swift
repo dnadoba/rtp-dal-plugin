@@ -8,16 +8,22 @@
 
 import Foundation
 import IOKit
+import VideoConnectivity
 
 class Device: Object {
     var objectID: CMIOObjectID = 0
+    var owningObjectID: CMIOObjectID { CMIOObjectID(kCMIOObjectSystemObject) }
     var streamID: CMIOStreamID = 0
-    let name: String
+    var name: String { sender.name }
     let manufacturer = "Apple"
     var deviceUID: String { "\(name) Device" }
     let modelUID = "SimpleDALPlugin Model"
     var excludeNonDALAccess: Bool = false
     var deviceMaster: Int32 = -1
+    let sender: Browser.Sender
+    weak var plugin: Plugin?
+    
+    let stream: RTPStream
 
     lazy var properties: [Int : Property] = [
         kCMIOObjectPropertyName: Property(name),
@@ -43,7 +49,9 @@ class Device: Object {
         ),
     ]
     
-    init(name: String) {
-        self.name = name
+    init(sender: Browser.Sender, plugin: Plugin) {
+        self.sender = sender
+        self.plugin = plugin
+        self.stream = RTPStream(sender: sender, plugin: plugin)
     }
 }

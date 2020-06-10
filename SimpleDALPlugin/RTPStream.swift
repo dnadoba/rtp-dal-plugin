@@ -10,6 +10,7 @@ import Foundation
 import SwiftRTP
 import RTPAVKit
 import Network
+import VideoConnectivity
 
 protocol Stream: Object {
     func start()
@@ -20,7 +21,10 @@ protocol Stream: Object {
 
 class RTPStream: Stream {
     var objectID: CMIOObjectID = 0
-    let name: String
+    var owningObjectID: CMIOObjectID = 0
+    let sender: Browser.Sender
+    weak var plugin: Plugin?
+    var name: String { sender.name }
     let width = 1920
     let height = 1080
     let frameRate = 30
@@ -80,8 +84,9 @@ class RTPStream: Stream {
         return properties
     }
     
-    init(name: String) {
-        self.name = name
+    init(sender: Browser.Sender, plugin: Plugin) {
+        self.sender = sender
+        self.plugin = plugin
         self.formatDescription = {
             var formatDescription: CMVideoFormatDescription?
             let error = CMVideoFormatDescriptionCreate(
@@ -101,16 +106,8 @@ class RTPStream: Stream {
     
     private var reciever: RTPH264Reciever?
     private var decoder: VideoDecoder?
-    func start() {
-        log("RTPStream start()")
-        guard reciever == nil else {
-            log("RTPStream is already running")
-            return
-        }
-        // TODO: use Browser
-        let connection = NWConnection(to: .hostPort(host: .ipv4(.any), port: 8080), using: .udp)
-        reciever = try? .init(connection: connection, timebase: CMTimebase(masterClock: CMClockGetHostTimeClock()))
-        reciever?.didRecieveFormatDescription = { [weak self] formatDescription in
+    func start(with reciever: RTPH264Reciever) {
+        reciever.didRecieveFormatDescription = { [weak self] formatDescription in
             guard let self = self else { return }
     
             do {
@@ -126,7 +123,7 @@ class RTPStream: Stream {
             }
             
         }
-        reciever?.didRecieveSampleBuffer = { [weak self] sampleBuffer in
+        reciever.didRecieveSampleBuffer = { [weak self] sampleBuffer in
             log("did didRecieveSampleBuffer")
             guard let self = self else { return }
             
@@ -136,6 +133,15 @@ class RTPStream: Stream {
                 log(error)
             }
         }
+        reciever.start()
+        log("start")
+    }
+    
+    func start() {
+        plugin?.incrementConnection(to: sender)
+    }
+    func stop() {
+        plugin?.decrementConnection(to: sender)
     }
     
     private func makeDecoder(formatDescription: CMVideoFormatDescription) throws -> VideoDecoder {
@@ -220,9 +226,6 @@ class RTPStream: Stream {
         return decoder
     }
 
-    func stop() {
-        //reciever = nil
-    }
     private func getNextSequenceNumber() -> UInt64 {
         defer { sequenceNumber += 1 }
         return sequenceNumber

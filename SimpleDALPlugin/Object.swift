@@ -10,6 +10,7 @@ import Foundation
 
 protocol Object: class {
     var objectID: CMIOObjectID { get }
+    var owningObjectID: CMIOObjectID { get }
     var properties: [Int: Property] { get }
 }
 
@@ -46,4 +47,8 @@ var objects = [CMIOObjectID: Object]()
 
 func addObject(object: Object) {
     objects[object.objectID] = object
+}
+
+func removeObject(object: Object) {
+    objects[object.objectID] = nil
 }

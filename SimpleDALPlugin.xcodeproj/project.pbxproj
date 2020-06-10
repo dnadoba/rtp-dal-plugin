@@ -10,6 +10,8 @@
 		4F3081292474C5BD00F099D9 /* RTPStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3081282474C5BD00F099D9 /* RTPStream.swift */; };
 		4F30812D2474CC8200F099D9 /* SwiftRTP in Frameworks */ = {isa = PBXBuildFile; productRef = 4F30812C2474CC8200F099D9 /* SwiftRTP */; };
 		4F30812F2474CCBA00F099D9 /* RTPAVKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4F30812E2474CCBA00F099D9 /* RTPAVKit */; };
+		4F529C6124892F74007C6B32 /* VideoConnectivity in Frameworks */ = {isa = PBXBuildFile; productRef = 4F529C6024892F74007C6B32 /* VideoConnectivity */; };
+		4F529C64248950AF007C6B32 /* SetDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F529C63248950AF007C6B32 /* SetDiff.swift */; };
 		BE8832AC2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8832AB2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift */; };
 		BEF5B53A2453D9CA00E7FC18 /* Main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF5B5392453D9CA00E7FC18 /* Main.swift */; };
 		BEF5B53D2453DFA200E7FC18 /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEF5B53C2453DFA200E7FC18 /* CoreMediaIO.framework */; };
@@ -26,6 +28,8 @@
 		4F3081262474C58100F099D9 /* SwiftRTP */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftRTP; path = ../SwiftRTP; sourceTree = "<group>"; };
 		4F3081272474C59D00F099D9 /* RTPAVKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RTPAVKit; path = ../RTPAVKit; sourceTree = "<group>"; };
 		4F3081282474C5BD00F099D9 /* RTPStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPStream.swift; sourceTree = "<group>"; };
+		4F529C5F24892E28007C6B32 /* VideoConnectivity */ = {isa = PBXFileReference; lastKnownFileType = folder; name = VideoConnectivity; path = ../VideoConnectivity; sourceTree = "<group>"; };
+		4F529C63248950AF007C6B32 /* SetDiff.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SetDiff.swift; sourceTree = "<group>"; };
 		BE8832AB2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CVPixelBuffer+SimpleDALPlugin.swift"; sourceTree = "<group>"; };
 		BEF5B52F2453D9B300E7FC18 /* SimpleDALPlugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleDALPlugin.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEF5B5322453D9B300E7FC18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -49,15 +53,25 @@
 				BEF5B53D2453DFA200E7FC18 /* CoreMediaIO.framework in Frameworks */,
 				4F30812D2474CC8200F099D9 /* SwiftRTP in Frameworks */,
 				4F30812F2474CCBA00F099D9 /* RTPAVKit in Frameworks */,
+				4F529C6124892F74007C6B32 /* VideoConnectivity in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4F529C6224895073007C6B32 /* Diff */ = {
+			isa = PBXGroup;
+			children = (
+				4F529C63248950AF007C6B32 /* SetDiff.swift */,
+			);
+			path = Diff;
+			sourceTree = "<group>";
+		};
 		BEF5B5262453D9B300E7FC18 = {
 			isa = PBXGroup;
 			children = (
+				4F529C5F24892E28007C6B32 /* VideoConnectivity */,
 				4F3081262474C58100F099D9 /* SwiftRTP */,
 				4F3081272474C59D00F099D9 /* RTPAVKit */,
 				BEF5B5312453D9B300E7FC18 /* SimpleDALPlugin */,
@@ -77,6 +91,7 @@
 		BEF5B5312453D9B300E7FC18 /* SimpleDALPlugin */ = {
 			isa = PBXGroup;
 			children = (
+				4F529C6224895073007C6B32 /* Diff */,
 				BEF5B5322453D9B300E7FC18 /* Info.plist */,
 				BEF5B5392453D9CA00E7FC18 /* Main.swift */,
 				BEF5B53E2453E8F500E7FC18 /* PluginInterface.swift */,
@@ -121,6 +136,7 @@
 			packageProductDependencies = (
 				4F30812C2474CC8200F099D9 /* SwiftRTP */,
 				4F30812E2474CCBA00F099D9 /* RTPAVKit */,
+				4F529C6024892F74007C6B32 /* VideoConnectivity */,
 			);
 			productName = SimpleDALPlugin;
 			productReference = BEF5B52F2453D9B300E7FC18 /* SimpleDALPlugin.plugin */;
@@ -200,6 +216,7 @@
 				4F3081292474C5BD00F099D9 /* RTPStream.swift in Sources */,
 				BEF5B5452454003B00E7FC18 /* Log.swift in Sources */,
 				BE8832AC2454424600326232 /* CVPixelBuffer+SimpleDALPlugin.swift in Sources */,
+				4F529C64248950AF007C6B32 /* SetDiff.swift in Sources */,
 				BEF5B547245403AF00E7FC18 /* Device.swift in Sources */,
 				BEF5B5432453FE5D00E7FC18 /* Plugin.swift in Sources */,
 				BEF5B53A2453D9CA00E7FC18 /* Main.swift in Sources */,
@@ -334,7 +351,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.seanchas116.SimpleDALPlugin;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nadoba.SimpleDALPlugin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SimpleDALPlugin/SimpleDALPlugin-Bridging-Header.h";
@@ -358,7 +375,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.seanchas116.SimpleDALPlugin;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nadoba.SimpleDALPlugin;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SimpleDALPlugin/SimpleDALPlugin-Bridging-Header.h";
@@ -398,6 +415,10 @@
 		4F30812E2474CCBA00F099D9 /* RTPAVKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RTPAVKit;
+		};
+		4F529C6024892F74007C6B32 /* VideoConnectivity */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VideoConnectivity;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
