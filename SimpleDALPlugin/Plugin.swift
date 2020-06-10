@@ -11,6 +11,7 @@ import VideoConnectivity
 import RTPAVKit
 
 class Plugin: Object {
+    var objectClass: CMIOClassID { CMIOClassID(kCMIOPlugInClassID) }
     var objectID: CMIOObjectID = 0
     var owningObjectID: CMIOObjectID { CMIOObjectID(kCMIOObjectSystemObject) }
     let name = "RTP Plugin"
@@ -90,7 +91,7 @@ class Plugin: Object {
             if let device = devices[sender] {
                 return device
             }
-            guard let newDevice = makeDevice(for: sender) else { return nil }
+            guard let newDevice = try? makeDevice(for: sender) else { return nil }
             devices[sender] = newDevice
             return newDevice
         }() else { return }
@@ -104,41 +105,58 @@ class Plugin: Object {
         }
     }
     
-    private func makeDevice(for sender: Browser.Sender) -> Device? {
+    private func makeDevice(for sender: Browser.Sender) throws -> Device {
         let device = Device(sender: sender, plugin: self)
         
-        let deviceError = CMIOObjectCreate(ref, CMIOObjectID(kCMIOObjectSystemObject), CMIOClassID(kCMIODeviceClassID), &device.objectID)
-        guard deviceError == noErr else {
-            log("device create error: \(deviceError)")
-            return nil
-        }
+        try createObject(device)
         
+        device.stream.owningObjectID = device.objectID
         
-        let streamError = CMIOObjectCreate(ref, device.objectID, CMIOClassID(kCMIOStreamClassID), &device.stream.objectID)
-        guard streamError == noErr else {
-            log("stream create error: \(streamError)")
-            return nil
-        }
+        try createObject(device.stream)
         
         device.streamID = device.stream.objectID
-        device.stream.owningObjectID = device.objectID
         
         addObject(object: device)
         addObject(object: device.stream)
         
+        try publishObject(device)
+        try publishObject(device.stream)
         
-        
-        let devicePublishError = CMIOObjectsPublishedAndDied(ref, CMIOObjectID(kCMIOObjectSystemObject), 1, &device.objectID, 0, nil)
-        guard devicePublishError == noErr else {
-            log("devicePublishError: \(devicePublishError)")
-            return nil
-        }
-        
-        let streamPublishError = CMIOObjectsPublishedAndDied(ref, device.objectID, 1, &device.stream.objectID, 0, nil)
-        guard streamPublishError == noErr else {
-            log("streamPublishError: \(streamPublishError)")
-            return nil
-        }
         return device
+    }
+}
+
+enum PluginError: Error {
+    case objectCreateError
+    case objectPublishError
+    case objectKillError
+}
+
+extension Plugin {
+    func createObject(_ object: Object) throws {
+        let error = CMIOObjectCreate(ref, object.owningObjectID, object.objectClass, &object.objectID)
+        guard error == noErr else {
+            log("object \(object) create error: \(error)")
+            throw PluginError.objectCreateError
+        }
+    }
+}
+
+extension Plugin {
+    func publishObject(_ object: Object) throws {
+        var objectId = object.objectID
+        let error = CMIOObjectsPublishedAndDied(ref, object.owningObjectID, 1, &objectId, 0, nil)
+        guard error == noErr else {
+            log("object \(object) publish error: \(error)")
+            throw PluginError.objectPublishError
+        }
+    }
+    func killObject(_ object: Object) throws {
+        var objectId = object.objectID
+        let error = CMIOObjectsPublishedAndDied(ref, object.owningObjectID,  0, nil, 1, &objectId)
+        guard error == noErr else {
+            log("object \(object) kill error: \(error)")
+            throw PluginError.objectKillError
+        }
     }
 }

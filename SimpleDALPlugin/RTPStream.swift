@@ -20,6 +20,7 @@ protocol Stream: Object {
 
 
 class RTPStream: Stream {
+    var objectClass: CMIOClassID { CMIOClassID(kCMIOStreamClassID) }
     var objectID: CMIOObjectID = 0
     var owningObjectID: CMIOObjectID = 0
     let sender: Browser.Sender

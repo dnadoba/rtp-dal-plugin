@@ -9,7 +9,8 @@
 import Foundation
 
 protocol Object: class {
-    var objectID: CMIOObjectID { get }
+    var objectClass: CMIOClassID { get }
+    var objectID: CMIOObjectID { get set }
     var owningObjectID: CMIOObjectID { get }
     var properties: [Int: Property] { get }
 }

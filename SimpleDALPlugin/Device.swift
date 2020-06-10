@@ -11,6 +11,8 @@ import IOKit
 import VideoConnectivity
 
 class Device: Object {
+    var objectClass: CMIOClassID { CMIOClassID(kCMIODeviceClassID) }
+    
     var objectID: CMIOObjectID = 0
     var owningObjectID: CMIOObjectID { CMIOObjectID(kCMIOObjectSystemObject) }
     var streamID: CMIOStreamID = 0

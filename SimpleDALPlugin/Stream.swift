@@ -9,6 +9,7 @@
 import Foundation
 
 class DebugStream: Stream {
+    var objectClass: CMIOClassID { CMIOClassID(kCMIOStreamClassID) }
     var objectID: CMIOObjectID = 0
     var owningObjectID: CMIOObjectID = 0
     let name: String
