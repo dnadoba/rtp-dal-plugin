@@ -7,7 +7,9 @@
 //
 
 import Foundation
+import OSLog
 
 func log(_ message: Any = "", function: String = #function) {
-    NSLog("SimpleDALPlugin: \(function): \(message)")
+    //NSLog("SimpleDALPlugin: \(function): \(message)")
+    os_log("SimpleDALPlugin - %{public}@: %{public}@", function, String(describing: message))
 }

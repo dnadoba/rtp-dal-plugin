@@ -24,27 +24,30 @@ class Plugin: Object {
     
     let autoConnector = AutoConnector()
     private var availableDevices: Set<Browser.Sender> = []
-    private var requestedConnectionCount: [Browser.Sender: Int] = [:]
+    private var requestedConnectionCount: [Browser.Sender: Int] = [:] {
+        didSet {
+            log(requestedConnectionCount)
+        }
+    }
     private var devices: [Browser.Sender: Device] = [:]
     let ref: CMIOHardwarePlugInRef?
     init(ref: CMIOHardwarePlugInRef?) {
         self.ref = ref
         autoConnector.didChangeSender = { [weak self] availableSender, connected in
-            guard let self = self else { return }
-            self.queue.async { [weak self] in
-                guard let self = self else { return }
-                log("didChangeSender \(availableSender)")
+            guard let strongSelf1 = self else { return }
+            strongSelf1.queue.async { [weak strongSelf1] in
+                guard let strongSelf2 = strongSelf1 else { return }
+                log("didChangeSender availableSender: \(availableSender)")
+                log("didChangeSender conntected: \(connected.keys)")
                 let availableDevices = Set(availableSender).union(connected.keys)
-                defer { self.availableDevices = availableDevices }
-                let diff = self.availableDevices.difference(from: availableDevices)
+                defer { strongSelf2.availableDevices = availableDevices }
+                let diff = availableDevices.difference(from: strongSelf2.availableDevices)
                 for removedSender in diff.removed {
-                    self.removeDevice(sender: removedSender)
+                    strongSelf2.removeDevice(sender: removedSender)
                 }
                 for availableDevice in availableDevices {
-                    self.addOrUpdateDevice(sender: availableDevice, reciever: connected[availableDevice])
+                    strongSelf2.addOrUpdateDevice(sender: availableDevice, reciever: connected[availableDevice])
                 }
-                // TODO: remvoe me
-                self.updateAutoConnector()
             }
         }
         queue.async {
@@ -70,20 +73,28 @@ class Plugin: Object {
     
     public func decrementConnection(to sender: Browser.Sender) {
         queue.sync {
-            //requestedConnectionCount[sender, default: 0] -= 1
+            requestedConnectionCount[sender, default: 0] -= 1
+            requestedConnectionCount = requestedConnectionCount.filter({ $0.value > 0 })
             self.updateAutoConnector()
         }
     }
     
     private func updateAutoConnector() {
-        let senderToAutoConnect = Set(autoConnector.sender)
-//        let senderToAutoConnect = Set(requestedConnectionCount.filter({ $0.value >= 0 }).keys)
+        //let senderToAutoConnect = Set(autoConnector.sender)
+        let senderToAutoConnect = Set(requestedConnectionCount.filter({ $0.value > 0 }).keys)
         log("auto connect to \(senderToAutoConnect)")
         autoConnector.updateAutoConnect(senderToAutoConnect)
     }
     
     private func removeDevice(sender: Browser.Sender) {
-        // TODO: remove device
+        log(sender)
+        guard let device = devices[sender] else { return }
+        requestedConnectionCount[sender] = nil
+        devices[sender] = nil
+        try? killObject(device.stream)
+        try? killObject(device)
+        removeObject(object: device.stream)
+        removeObject(object: device)
     }
     
     private func addOrUpdateDevice(sender: Browser.Sender, reciever: RTPH264Reciever?) {
@@ -97,15 +108,16 @@ class Plugin: Object {
         }() else { return }
         log(device.name)
         log(reciever)
-        var myClassDumped = String()
-        dump(autoConnector, to: &myClassDumped)
-        log("AutoConnector \(myClassDumped)")
+        //var myClassDumped = String()
+        //dump(autoConnector, to: &myClassDumped)
+        //log("AutoConnector \(myClassDumped)")
         if let reciever = reciever {
             device.stream.start(with: reciever)
         }
     }
     
     private func makeDevice(for sender: Browser.Sender) throws -> Device {
+        log(sender)
         let device = Device(sender: sender, plugin: self)
         
         try createObject(device)
@@ -133,7 +145,7 @@ enum PluginError: Error {
 }
 
 extension Plugin {
-    func createObject(_ object: Object) throws {
+    fileprivate func createObject(_ object: Object) throws {
         let error = CMIOObjectCreate(ref, object.owningObjectID, object.objectClass, &object.objectID)
         guard error == noErr else {
             log("object \(object) create error: \(error)")
@@ -143,7 +155,7 @@ extension Plugin {
 }
 
 extension Plugin {
-    func publishObject(_ object: Object) throws {
+    fileprivate func publishObject(_ object: Object) throws {
         var objectId = object.objectID
         let error = CMIOObjectsPublishedAndDied(ref, object.owningObjectID, 1, &objectId, 0, nil)
         guard error == noErr else {
@@ -151,7 +163,7 @@ extension Plugin {
             throw PluginError.objectPublishError
         }
     }
-    func killObject(_ object: Object) throws {
+    fileprivate func killObject(_ object: Object) throws {
         var objectId = object.objectID
         let error = CMIOObjectsPublishedAndDied(ref, object.owningObjectID,  0, nil, 1, &objectId)
         guard error == noErr else {

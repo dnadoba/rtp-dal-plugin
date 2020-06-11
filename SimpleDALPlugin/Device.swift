@@ -32,7 +32,7 @@ class Device: Object {
         kCMIOObjectPropertyManufacturer: Property(manufacturer),
         kCMIODevicePropertyDeviceUID: Property(deviceUID),
         kCMIODevicePropertyModelUID: Property(modelUID),
-        kCMIODevicePropertyTransportType: Property(UInt32(kIOAudioDeviceTransportTypeBuiltIn)),
+        kCMIODevicePropertyTransportType: Property(UInt32(kIOAudioDeviceTransportTypeNetwork)),
         kCMIODevicePropertyDeviceIsAlive: Property(UInt32(1)),
         kCMIODevicePropertyDeviceIsRunning: Property(UInt32(1)),
         kCMIODevicePropertyDeviceIsRunningSomewhere: Property(UInt32(1)),
